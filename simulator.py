@@ -76,10 +76,10 @@ BAKU_HOTSPOTS = [
     {"lat": 40.3729, "lon": 49.8404, "zone": "Nizami küçəsi",        "incidents": 45, "severity": "high"},
     {"lat": 40.3791, "lon": 49.8527, "zone": "28 May metro",          "incidents": 62, "severity": "high"},
     {"lat": 40.4017, "lon": 49.8607, "zone": "Gənclik metro",         "incidents": 38, "severity": "high"},
-    {"lat": 40.3662, "lon": 49.8353, "zone": "Sahil metro",           "incidents": 19, "severity": "low"},
+    {"lat": 40.3662, "lon": 49.8353, "zone": "Azneft Meydanı",           "incidents": 19, "severity": "low"},
     {"lat": 40.3503, "lon": 49.8434, "zone": "Bayıl",                 "incidents": 22, "severity": "medium"},
     {"lat": 40.4676, "lon": 49.8222, "zone": "Binəqədi",              "incidents": 28, "severity": "medium"},
-    {"lat": 40.3614, "lon": 49.7997, "zone": "Biləcəri",              "incidents": 17, "severity": "low"},
+    {"lat": 40.3820, "lon": 49.8150, "zone": "Yasamal",               "incidents": 17, "severity": "low"},
     {"lat": 40.4675, "lon": 50.0467, "zone": "Heydar Əliyev Hava Limanı", "incidents": 31, "severity": "medium"},
 ]
 
