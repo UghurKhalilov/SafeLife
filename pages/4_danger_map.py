@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
+import folium
+from streamlit_folium import st_folium
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from simulator import BAKU_HOTSPOTS
@@ -61,38 +62,51 @@ with c3:
 
 st.divider()
 
-color_map = {"high": "#fc8181", "medium": "#f6ad55", "low": "#68d391"}
-df["color"] = df["severity"].map(color_map)
+color_map = {"high": "red", "medium": "orange", "low": "green"}
 
-fig = go.Figure()
-for _, row in df.iterrows():
-    fig.add_trace(go.Scattermap(
-        lat=[row["lat"]],
-        lon=[row["lon"]],
-        mode="markers",
-        marker=dict(
-            size=max(20, row["incidents"] // 2),
-            color=row["color"],
-            opacity=0.75
-        ),
-        text=f"{row['zone']}<br>Qəza: {row['incidents']}<br>Səviyyə: {row['severity'].upper()}",
-        hoverinfo="text",
-        name=row["zone"]
-    ))
-
-fig.update_layout(
-    map=dict(
-        style="carto-darkmatter",
-        center=dict(lat=40.4093, lon=49.8671),
-        zoom=11
-    ),
-    paper_bgcolor="#0d1117",
-    font=dict(color="#a0aec0"),
-    height=500,
-    margin=dict(l=0, r=0, t=0, b=0),
-    showlegend=False
+m = folium.Map(
+    location=[40.3953, 49.8822],
+    zoom_start=12,
+    tiles="CartoDB dark_matter"
 )
-st.plotly_chart(fig, use_container_width=True)
+
+for _, row in df.iterrows():
+    color = color_map.get(row["severity"], "blue")
+    radius = max(15, row["incidents"] // 2)
+
+    folium.CircleMarker(
+        location=[row["lat"], row["lon"]],
+        radius=radius,
+        color=color,
+        fill=True,
+        fill_color=color,
+        fill_opacity=0.6,
+        tooltip=f"""
+            <b>{row['zone']}</b><br>
+            Qəza sayı: {row['incidents']}<br>
+            Səviyyə: {row['severity'].upper()}
+        """
+    ).add_to(m)
+
+    folium.Marker(
+        location=[row["lat"], row["lon"]],
+        icon=folium.DivIcon(
+            html=f"""<div style="
+                font-size:11px;
+                font-weight:700;
+                color:white;
+                background:{color};
+                padding:3px 7px;
+                border-radius:6px;
+                white-space:nowrap;
+                box-shadow:0 2px 6px rgba(0,0,0,0.4)
+            ">{row['zone']}</div>""",
+            icon_size=(120, 30),
+            icon_anchor=(60, 30)
+        )
+    ).add_to(m)
+
+st_folium(m, width=None, height=520, use_container_width=True)
 
 st.divider()
 st.markdown("#### 📋 Zona detalları")
