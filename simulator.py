@@ -73,14 +73,14 @@ def generate_stream(scenario_name, n_frames=60, mode="Pedestrian"):
     return pd.DataFrame(frames)
 
 BAKU_HOTSPOTS = [
-    {"lat": 40.4093, "lon": 49.8671, "zone": "Nizami",              "incidents": 45, "severity": "high"},
-    {"lat": 40.3777, "lon": 49.8920, "zone": "Heydar Aliyev Airport","incidents": 28, "severity": "medium"},
-    {"lat": 40.4200, "lon": 49.8500, "zone": "28 May",              "incidents": 62, "severity": "high"},
-    {"lat": 40.3950, "lon": 49.8800, "zone": "Sahil",               "incidents": 19, "severity": "low"},
-    {"lat": 40.4300, "lon": 49.8300, "zone": "Gənclik",             "incidents": 38, "severity": "high"},
-    {"lat": 40.4050, "lon": 49.9100, "zone": "Bayıl",               "incidents": 22, "severity": "medium"},
-    {"lat": 40.4450, "lon": 49.8600, "zone": "Binəqədi",            "incidents": 31, "severity": "medium"},
-    {"lat": 40.3800, "lon": 49.8400, "zone": "Biləcəri",            "incidents": 17, "severity": "low"},
+    {"lat": 40.3729, "lon": 49.8404, "zone": "Nizami küçəsi",        "incidents": 45, "severity": "high"},
+    {"lat": 40.3791, "lon": 49.8527, "zone": "28 May metro",          "incidents": 62, "severity": "high"},
+    {"lat": 40.4017, "lon": 49.8607, "zone": "Gənclik metro",         "incidents": 38, "severity": "high"},
+    {"lat": 40.3662, "lon": 49.8353, "zone": "Sahil metro",           "incidents": 19, "severity": "low"},
+    {"lat": 40.3503, "lon": 49.8434, "zone": "Bayıl",                 "incidents": 22, "severity": "medium"},
+    {"lat": 40.4676, "lon": 49.8222, "zone": "Binəqədi",              "incidents": 28, "severity": "medium"},
+    {"lat": 40.3614, "lon": 49.7997, "zone": "Biləcəri",              "incidents": 17, "severity": "low"},
+    {"lat": 40.4675, "lon": 50.0467, "zone": "Heydar Əliyev Hava Limanı", "incidents": 31, "severity": "medium"},
 ]
 
 COMPETITORS = {
