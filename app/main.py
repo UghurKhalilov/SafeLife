@@ -3,8 +3,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import init_db
-from app.api import routes_health, routes_ingest, routes_fall
-from app.services.fall_engine import fall_engine
+# Yalnız mövcud router-ləri import et
+from app.api import routes_health, routes_ingest
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -13,7 +14,7 @@ async def lifespan(app: FastAPI):
     print("Database initialized.")
     yield
     print("Shutting down... Cancelling timers.")
-    fall_engine.shutdown_all()
+    # fall_engine.shutdown_all()  # <<< KOMMENT ET (hələ yoxdur)
 
 app = FastAPI(
     title="SafeLife Pilot API",
@@ -30,7 +31,7 @@ app.add_middleware(
 
 app.include_router(routes_health.router)
 app.include_router(routes_ingest.router)
-app.include_router(routes_fall.router)
+
 
 @app.get("/")
 def root():

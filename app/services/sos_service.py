@@ -1,47 +1,43 @@
-from typing import List
-from sqlalchemy.orm import Session
-from app.models.db_models import User, TrustedContact, FallEvent
-from app.config import settings
+import asyncio
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.database import AsyncSessionLocal
+from app.models.sqlalchemy_models import FallEvent, SosAlert
 
-class SosService:
-    def send_sms(self, to_phone: str, text: str) -> bool:
-        print(f"[SOS SMS] TO: {to_phone} | TEXT: {text[:50]}...")
-        # REAL: Twilio client.messages.create(...)
-        return True
-
-    def make_call(self, to_phone: str) -> bool:
-        print(f"[SOS CALL] CALLING: {to_phone}")
-        # REAL: Twilio client.calls.create(...)
-        return True
-
-    def execute_sos_protocol(self, db: Session, event: FallEvent):
-        user = db.query(User).filter(User.id == event.user_id).first()
-        if not user: return
-
-        contacts: List[TrustedContact] = [c for c in user.contacts if c.is_active][:5]
-        medical = user.medical_info or "Məlumat yoxdur"
-        loc = f"https://maps.google.com/?q={event.gps_lat},{event.gps_lon}" if event.gps_lat else "Lokasiya yoxdur"
+async def trigger_sos_for_fall(fall_event_id: int):
+    """
+    Background task olaraq işləyir.
+    Yeni session açır (request session-u bağlanıb).
+    """
+    async with AsyncSessionLocal() as db:
+        # FallEvent-i tap
+        result = await db.execute(select(FallEvent).where(FallEvent.id == fall_event_id))
+        event = result.scalar_one_or_none()
         
-        sms_text = (
-            f"[SAFELIFE QƏZA] İstifadəçi: {user.username}\n"
-            f"Ehtimal: %{event.probability*100:.0f}\n"
-            f"Lokasiya: {loc}\n"
-            f"Tibbi: {medical}\n"
-            f"Vaxt: {event.triggered_at.strftime('%H:%M:%S')}"
+        if not event:
+            print(f"[SOS] FallEvent {fall_event_id} tapılmadı")
+            return
+        
+        if event.sos_triggered:
+            print(f"[SOS] FallEvent {fall_event_id} artıq tetiklənib")
+            return
+        
+        print(f"[SOS] 🚨 FALL DETECTED! Device: {event.device_id}, Prob: {event.probability:.2f}")
+        
+        # Stub: SosAlert yarad (channel: log)
+        alert = SosAlert(
+            fall_event_id=event.id,
+            channel="log",
+            recipient="stdout",
+            status="sent",
+            sent_at=event.timestamp
         )
-
-        for c in contacts:
-            self.send_sms(c.phone, sms_text)
+        db.add(alert)
         
-        self.make_call("103")
-        print(f"[SosService] SOS Protocol executed for {event.event_uid}")
-
-    def send_safe_sms(self, db: Session, event: FallEvent):
-        user = db.query(User).filter(User.id == event.user_id).first()
-        if not user: return
-        contacts = [c for c in user.contacts if c.is_active][:5]
-        text = f"[SAFELIFE TƏHLÜKƏSİZDIR] {user.username} 'Mən yaxşıyam' düyməsini bastı. Qəza ləğv edildi."
-        for c in contacts:
-            self.send_sms(c.phone, text)
-
-sos_service = SosService()
+        # Event-i yenilə
+        event.sos_triggered = True
+        event.sos_timestamp = event.timestamp
+        event.status = "confirmed"
+        
+        await db.commit()
+        print(f"[SOS] ✅ Alert logged for event {event.id}")

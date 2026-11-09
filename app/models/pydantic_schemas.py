@@ -1,39 +1,59 @@
 from pydantic import BaseModel, Field
+from typing import List, Optional
 from datetime import datetime
-from typing import List, Optional, Literal
-import uuid
-from app.models.db_models import FallStatus
 
-# --- Sensor Ingestion ---
-class SensorReading(BaseModel):
-    timestamp: datetime
-    acc_x: float; acc_y: float; acc_z: float
-    gyro_x: float; gyro_y: float; gyro_z: float
-    gps_lat: Optional[float] = None
-    gps_lon: Optional[float] = None
+class SensorFeatures(BaseModel):
+    """6 feature: ax, ay, az, gx, gy, gz"""
+    ax: float = Field(..., description="Accelerometer X (m/s²)")
+    ay: float = Field(..., description="Accelerometer Y (m/s²)")
+    az: float = Field(..., description="Accelerometer Z (m/s²)")
+    gx: float = Field(..., description="Gyroscope X (rad/s)")
+    gy: float = Field(..., description="Gyroscope Y (rad/s)")
+    gz: float = Field(..., description="Gyroscope Z (rad/s)")
 
-class IngestBatchRequest(BaseModel):
-    device_id: str
-    readings: List[SensorReading]
+    def to_list(self) -> List[float]:
+        """Model Service Buffer üçün sıralı listə çevirir."""
+        return [self.ax, self.ay, self.az, self.gx, self.gy, self.gz]
 
+
+class IngestPayload(BaseModel):
+    device_id: str = Field(..., min_length=1, max_length=100, description="Unique device/user ID")
+    timestamp: int = Field(..., description="Unix timestamp (milliseconds or seconds)")
+    features: SensorFeatures
+    
+    # Optional location (Android GPS varsa)
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    accuracy: Optional[float] = None
+
+
+# --- API Cavabı ---
 class IngestResponse(BaseModel):
-    received: int
-    action: Literal["NONE", "START_ALARM_15S"] = "NONE"
-    event_uid: Optional[uuid.UUID] = None
-    probability: Optional[float] = None
-    message: str = "OK"
+    status: str = "ok"
+    fall_detected: bool
+    probability: float
+    threshold: float
+    message: Optional[str] = None
 
-# --- Fall Actions ---
-class FallCancelRequest(BaseModel):
-    event_uid: uuid.UUID
 
-class FallCancelResponse(BaseModel):
-    success: bool
-    status: FallStatus
-
-# --- Health / Debug ---
+# --- Health Check (Artıq var, yenidən yoxlamaq üçün) ---
 class HealthResponse(BaseModel):
     status: str
     database: str
-    ai_model_loaded: bool  
+    ai_model_loaded: bool
     threshold: float
+
+
+# --- Fall Event (Frontend/Admin Panel üçün) ---
+class FallEventResponse(BaseModel):
+    id: int
+    device_id: str
+    timestamp: datetime
+    probability: float
+    status: str
+    latitude: Optional[float]
+    longitude: Optional[float]
+    sos_triggered: bool
+
+    class Config:
+        from_attributes = True
