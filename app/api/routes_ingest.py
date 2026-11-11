@@ -7,8 +7,13 @@ import time
 from app.api.deps import get_db
 from app.services.model_service import model_service
 from app.models.sqlalchemy_models import SensorReading, FallEvent, SosAlert
-from app.models.pydantic_schemas import IngestPayload, IngestResponse, SensorFeatures
-from app.services.sos_service import trigger_sos_for_fall  # Yaradacaq sonrakı addımda
+from app.models.pydantic_schemas import (
+    IngestPayload, 
+    IngestResponse, 
+    SensorFeatures, 
+    FallEventResponse  # <<< BURADA IMPORT OLUNDU
+)
+from app.services.sos_service import trigger_sos_for_fall
 
 router = APIRouter(prefix="/api/v1", tags=["Ingest"])
 
@@ -19,32 +24,38 @@ async def ingest_sensor_data(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db)
 ):
-
+    """
+    Android / IoT cihazından sensor məlumatlarını qəbul edir.
+    1. Buffer-a əlavə edir.
+    2. Buffer dolarsa (100 sample) → Model predict edir.
+    3. Hər halda DB-yə yazır.
+    4. Fall olarsa → SOS tetikləyir (background-da).
+    """
     device_id = payload.device_id
     features_list: List[float] = payload.features.to_list()
     
-    
+    # 1. Model Service Buffer-a əlavə et
     window_array = model_service.add_sample(device_id, features_list)
     
-    
+    # Default dəyərlər
     is_fall = False
     probability = 0.0
     threshold = model_service.threshold
     
-    
+    # 2. Əgər window dolubsa → Predict et
     if window_array is not None:
         result = model_service.predict(window_array)
         is_fall = result["is_fall"]
         probability = result["probability"]
         threshold = result["threshold"]
         
-        
+        # Qəza aşkarlananda buffer-i sıfırla (cooldown)
         if is_fall:
             model_service.reset_buffer(device_id)
     
-    
+    # 3. SensorReading DB-yə yaz (hər zaman)
     ts = payload.timestamp
-    if ts > 1e12:  
+    if ts > 1e12:  # millisecondsdir
         from datetime import datetime, timezone
         dt = datetime.fromtimestamp(ts / 1000, tz=timezone.utc)
     else:
@@ -103,7 +114,7 @@ async def get_fall_history(
     limit: int = 50,
     db: AsyncSession = Depends(get_db)
 ):
-    """Cihazın qəza tarixçəsini qaytarır (Admin/App UI üçün)."""
+    
     result = await db.execute(
         select(FallEvent)
         .where(FallEvent.device_id == device_id)
