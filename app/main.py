@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import init_db
 # Yalnız mövcud router-ləri import et
-from app.api import routes_health, routes_ingest
+from app.api import routes_health, routes_ingest, routes_collect
 
 
 @asynccontextmanager
@@ -31,6 +31,7 @@ app.add_middleware(
 
 app.include_router(routes_health.router)
 app.include_router(routes_ingest.router)
+app.include_router(routes_collect.router)
 
 
 @app.get("/")
