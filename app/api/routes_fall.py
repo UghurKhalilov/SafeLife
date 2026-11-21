@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db, verify_api_key
 from app.models.pydantic_schemas import FallCancelRequest, FallCancelResponse
 from app.services.fall_engine import fall_engine
-from app.models.db_models import FallEvent, FallStatus
+from app.models.sqlalchemy_models import FallEvent, FallStatus
 import uuid
 
 router = APIRouter(prefix="/api/v1", tags=["Fall Actions"], dependencies=[Depends(verify_api_key)])

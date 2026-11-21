@@ -2,7 +2,9 @@ import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.database import AsyncSessionLocal
-from app.models.sqlalchemy_models import FallEvent, SosAlert
+from app.models.sqlalchemy_models import FallEvent, SosAlert, FallStatus
+
+sos_service = None  # placeholder for backward compat
 
 async def trigger_sos_for_fall(fall_event_id: int):
     """
@@ -37,7 +39,7 @@ async def trigger_sos_for_fall(fall_event_id: int):
         # Event-i yenilə
         event.sos_triggered = True
         event.sos_timestamp = event.timestamp
-        event.status = "confirmed"
+        event.status = FallStatus.CONFIRMED
         
         await db.commit()
         print(f"[SOS] ✅ Alert logged for event {event.id}")

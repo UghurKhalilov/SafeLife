@@ -9,7 +9,8 @@ from sqlalchemy import select
 from app.services.sos_service import sos_service
 from app.services.model_service import model_service
 from app.config import settings
-from app.models.db_models import FallEvent, FallStatus, User
+from app.models.sqlalchemy_models import FallEvent, FallStatus
+from app.models.db_models import User
 from app.database import AsyncSessionLocal
 
 class FallEngine:

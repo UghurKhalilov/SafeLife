@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     MAX_LOCATION_UPDATES: int = 40
 
     class Config:
-        env_file = "../.env"  # Kök qovluqdakı .env
+        env_file = ".env"  # Kök qovluqdakı .env
         extra = "ignore"
 
 settings = Settings()

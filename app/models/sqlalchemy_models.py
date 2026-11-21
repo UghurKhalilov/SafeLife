@@ -1,8 +1,19 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, Text, ForeignKey, Index
+import uuid
+import enum
+from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, Text, ForeignKey, Index, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from app.database import Base
-from datetime import datetime
+from datetime import datetime, timezone
+
+
+class FallStatus(str, enum.Enum):
+    IDLE = "IDLE"
+    PENDING = "PENDING"
+    CONFIRMED = "CONFIRMED"
+    CANCELLED = "CANCELLED"
+    RESOLVED = "RESOLVED"
 
 class SensorReading(Base):
     __tablename__ = "sensor_readings"
@@ -37,30 +48,38 @@ class SensorReading(Base):
 class FallEvent(Base):
     __tablename__ = "fall_events"
     __table_args__ = {'extend_existing': True}
-    
+
     id = Column(Integer, primary_key=True, index=True)
+    event_uid = Column(PG_UUID(as_uuid=True), default=uuid.uuid4, unique=True, index=True)
+    user_id = Column(String(64), ForeignKey("users.id"), index=True, nullable=True)
     device_id = Column(String(100), index=True, nullable=False)
     timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True)
-    
+
     probability = Column(Float, nullable=False)
     threshold_used = Column(Float, nullable=False)
-    
-    
-    status = Column(String(20), default="detected", index=True)
-    
-   
+
+
+    status = Column(SQLEnum(FallStatus), default=FallStatus.IDLE, index=True)
+
+
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
     accuracy = Column(Float, nullable=True)
-    
-    
+    gps_lat = Column(Float, nullable=True)
+    gps_lon = Column(Float, nullable=True)
+
+
     sos_triggered = Column(Boolean, default=False)
     sos_timestamp = Column(DateTime(timezone=True), nullable=True)
     resolved_timestamp = Column(DateTime(timezone=True), nullable=True)
+    triggered_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
     notes = Column(Text, nullable=True)
-    
-   
+    meta_data = Column(Text, nullable=True)
+
+
     trigger_reading = relationship("SensorReading", back_populates="fall_event", uselist=False)
+    user = relationship("User", back_populates="fall_events")
 
 
 class SosAlert(Base):

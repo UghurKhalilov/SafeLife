@@ -10,3 +10,4 @@ pilot.db
 
 # Collected training data
 data/collected/
+.env

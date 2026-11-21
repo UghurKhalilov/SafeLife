@@ -6,11 +6,11 @@ import time
 
 from app.api.deps import get_db
 from app.services.model_service import model_service
-from app.models.sqlalchemy_models import SensorReading, FallEvent, SosAlert
+from app.models.sqlalchemy_models import SensorReading, FallEvent, SosAlert, FallStatus
 from app.models.pydantic_schemas import (
-    IngestPayload, 
-    IngestResponse, 
-    SensorFeatures, 
+    IngestPayload,
+    IngestResponse,
+    SensorFeatures,
     FallEventResponse  # <<< BURADA IMPORT OLUNDU
 )
 from app.services.sos_service import trigger_sos_for_fall
@@ -81,7 +81,7 @@ async def ingest_sensor_data(
             timestamp=dt,
             probability=probability,
             threshold_used=threshold,
-            status="detected",
+            status=FallStatus.PENDING,
             latitude=payload.latitude,
             longitude=payload.longitude,
             accuracy=payload.accuracy

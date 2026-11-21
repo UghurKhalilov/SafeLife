@@ -2,6 +2,8 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
 from enum import Enum
+import uuid
+from app.models.sqlalchemy_models import FallStatus
 
 class SensorFeatures(BaseModel):
     """6 feature: ax, ay, az, gx, gy, gz"""
@@ -43,6 +45,15 @@ class HealthResponse(BaseModel):
     database: str
     ai_model_loaded: bool
     threshold: float
+
+
+# --- Fall Actions ---
+class FallCancelRequest(BaseModel):
+    event_uid: uuid.UUID
+
+class FallCancelResponse(BaseModel):
+    success: bool
+    status: FallStatus
 
 
 # --- Fall Event (Frontend/Admin Panel üçün) ---
